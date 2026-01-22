@@ -13,7 +13,7 @@ node bin/lobster.js "workflows.run --name github.pr.monitor --args-json '{\"repo
   {
     "kind": "github.pr.monitor",
     "repo": "clawdbot/clawdbot",
-    "pr": 1152,
+    "prNumber": 1152,
     "key": "github.pr:clawdbot/clawdbot#1152",
     "changed": false,
     "summary": {
@@ -49,7 +49,7 @@ node bin/lobster.js "workflows.run --name github.pr.monitor --args-json '{\"repo
   {
     "kind": "github.pr.monitor",
     "repo": "clawdbot/clawdbot",
-    "pr": 1200,
+    "prNumber": 1200,
     "key": "github.pr:clawdbot/clawdbot#1200",
     "changed": true,
     "summary": {
@@ -144,10 +144,17 @@ node bin/lobster.js "workflows.run --name github.pr.monitor --args-json '{\"repo
 
 From this folder:
 
+- `pnpm install`
+- `pnpm test`
+- `pnpm lint`
 - `node ./bin/lobster.js --help`
-- `node ./bin/lobster.js version`
 - `node ./bin/lobster.js doctor`
 - `node ./bin/lobster.js "exec --json --shell 'echo [1,2,3]' | where '0>=0' | json"`
+
+### Notes
+
+- `pnpm test` runs `tsc` and then executes tests against `dist/`.
+- `bin/lobster.js` prefers the compiled entrypoint in `dist/` when present.
 ## Commands
 
 - `exec`: run OS commands
@@ -157,7 +164,5 @@ From this folder:
 
 ## Next steps
 
-- Canonical `EmailMessage` schema (normalize gog output predictably).
-- `email.draft` + `email.send` macros (compose approvals cleanly).
 - Clawdbot integration: ship as an optional Clawdbot plugin tool.
-- Slash command adapters for Codex/Claude Code/OpenCode (see `docs/SLASH_COMMANDS.md`).
+- More recipes will be added over time; non-Clawdbot/provider-specific integrations live in `lobster-integrations`.
