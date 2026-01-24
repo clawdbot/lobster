@@ -7,6 +7,7 @@ import { whereCommand } from "./stdlib/where.js";
 import { sortCommand } from "./stdlib/sort.js";
 import { dedupeCommand } from "./stdlib/dedupe.js";
 import { templateCommand } from "./stdlib/template.js";
+import { mapCommand } from "./stdlib/map.js";
 import { approveCommand } from "./stdlib/approve.js";
 import { clawdInvokeCommand } from "./stdlib/clawd_invoke.js";
 import { stateGetCommand, stateSetCommand } from "./stdlib/state.js";
@@ -31,6 +32,7 @@ export function createDefaultRegistry() {
     sortCommand,
     dedupeCommand,
     templateCommand,
+    mapCommand,
     approveCommand,
     clawdInvokeCommand,
     stateGetCommand,
