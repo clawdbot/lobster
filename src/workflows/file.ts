@@ -250,7 +250,17 @@ async function saveWorkflowResumeState(env: Record<string, string | undefined>, 
 }
 
 async function loadWorkflowResumeState(env: Record<string, string | undefined>, stateKey: string) {
-  const stored = await readStateJson({ env, key: stateKey });
+  let stored = await readStateJson({ env, key: stateKey });
+  if ((!stored || typeof stored !== 'object') && typeof stateKey === 'string') {
+    const altKey = stateKey.includes('workflow-resume_')
+      ? stateKey.replace('workflow-resume_', 'workflow_resume_')
+      : stateKey.includes('workflow_resume_')
+        ? stateKey.replace('workflow_resume_', 'workflow-resume_')
+        : null;
+    if (altKey) {
+      stored = await readStateJson({ env, key: altKey });
+    }
+  }
   if (!stored || typeof stored !== 'object') {
     throw new Error('Workflow resume state not found');
   }
