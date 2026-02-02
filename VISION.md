@@ -2,26 +2,26 @@
 
 ## One-liner
 
-**Lobster is safe automation for Clawdbot — workflows that ask before acting.**
+**Lobster is safe automation for OpenClaw — workflows that ask before acting.**
 
 ---
 
 ## What is Lobster?
 
-Lobster is a workflow runtime for Clawdbot. It lets you define multi-step automations that:
+Lobster is a workflow runtime for OpenClaw. It lets you define multi-step automations that:
 
 - Run deterministically (no LLM re-planning each step)
 - Halt at checkpoints and ask for approval before side effects
 - Resume exactly where they left off
 - Remember what they've already processed
 
-Think of it as **IFTTT/Zapier for Clawdbot, but with human checkpoints**.
+Think of it as **IFTTT/Zapier for OpenClaw, but with human checkpoints**.
 
 ---
 
 ## The Problem Lobster Solves
 
-### Today's workflow in Clawdbot
+### Today's workflow in OpenClaw
 
 ```
 User: "Check my email, draft replies to anything urgent, and send them"
@@ -46,7 +46,7 @@ What happens:
 ### With Lobster
 
 ```
-Clawdbot calls: lobster.run("email.triage")
+OpenClaw calls: lobster.run("email.triage")
 
 What happens:
 1. Lobster fetches emails (deterministic)
@@ -63,7 +63,7 @@ Tomorrow: Lobster remembers cursor, only processes new emails
 
 ---
 
-## Why Lobster Makes Clawdbot Better
+## Why Lobster Makes OpenClaw Better
 
 | Without Lobster | With Lobster |
 |-----------------|--------------|
@@ -85,7 +85,7 @@ Workflows can persist state: "last processed email ID", "last PR SHA seen", etc.
 
 ---
 
-## How Lobster Fits with Clawdbot
+## How Lobster Fits with OpenClaw
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -95,7 +95,7 @@ Workflows can persist state: "last processed email ID", "last PR SHA seen", etc.
                       │
                       ▼
 ┌─────────────────────────────────────────────────┐
-│                 Clawdbot                        │
+│                 OpenClaw                        │
 │   - Understands intent                          │
 │   - Chooses appropriate tool/workflow           │
 │   - Presents results and approval prompts       │
@@ -105,15 +105,15 @@ Workflows can persist state: "last processed email ID", "last PR SHA seen", etc.
 ┌─────────────────────────────────────────────────┐
 │                  Lobster                        │
 │   - Executes deterministic pipeline             │
-│   - Calls Clawdbot tools (gmail, trello, etc)   │
+│   - Calls OpenClaw tools (gmail, trello, etc)   │
 │   - Halts at approval checkpoints               │
 │   - Returns structured result + resume token    │
 └─────────────────────────────────────────────────┘
 ```
 
-**Key insight:** Lobster doesn't replace Clawdbot. It's the execution layer that makes Clawdbot's automations safe and efficient.
+**Key insight:** Lobster doesn't replace OpenClaw. It's the execution layer that makes OpenClaw's automations safe and efficient.
 
-- **Clawdbot** = the brain (understands what you want)
+- **OpenClaw** = the brain (understands what you want)
 - **Lobster** = the hands (executes workflows safely)
 - **Tools/Skills** = the capabilities (gmail, trello, github, etc.)
 
@@ -121,7 +121,7 @@ Workflows can persist state: "last processed email ID", "last PR SHA seen", etc.
 
 ## Who Should Use Lobster?
 
-### Average Clawdbot users (invisible benefit)
+### Average OpenClaw users (invisible benefit)
 They don't need to know Lobster exists. They just notice:
 - "Set up daily email triage" works better
 - Automations ask before sending/posting
@@ -133,7 +133,7 @@ They can:
 - Write new workflows for their specific needs
 - Share workflows with the community
 
-### The Clawdbot ecosystem
+### The OpenClaw ecosystem
 - Workflow recipes become a new category of shareable assets
 - Skills stay simple (just expose APIs)
 - Lobster handles the orchestration layer
@@ -151,21 +151,21 @@ They can:
 | Temporal | But 80/20 version for personal workflows |
 
 **Best analogy for most people:**
-> "Lobster is Zapier for Clawdbot, except it asks you before doing anything irreversible."
+> "Lobster is Zapier for OpenClaw, except it asks you before doing anything irreversible."
 
 ---
 
-## Why Not Build This Into Clawdbot Core?
+## Why Not Build This Into OpenClaw Core?
 
 It could be. But the plugin architecture is intentional:
 
-1. **Core stays small** — Clawdbot is already complex
+1. **Core stays small** — OpenClaw is already complex
 2. **Faster iteration** — Lobster can evolve without core releases
 3. **Opt-in** — Not everyone needs workflow automation
 4. **Community** — Easier to contribute workflows than core changes
 5. **Ecosystem proof** — If plugins work for Lobster, they work for other capabilities
 
-Pete (Clawdbot creator) explicitly built the plugin boundary to enable this pattern. Lobster is the first proof that it works.
+Pete (OpenClaw creator, formerly Clawdbot) explicitly built the plugin boundary to enable this pattern. Lobster is the first proof that it works.
 
 ---
 
@@ -221,9 +221,9 @@ Other automation tools either:
 - Don't integrate with your AI assistant
 
 Lobster is:
-- Native to Clawdbot (uses the same tools you already have)
+- Native to OpenClaw (uses the same tools you already have)
 - Safe by default (approvals are a language primitive)
-- Invisible when you want (Clawdbot uses it automatically)
+- Invisible when you want (OpenClaw uses it automatically)
 - Customizable when you need (write your own workflows)
 
 ---
@@ -232,8 +232,8 @@ Lobster is:
 
 - **Not a terminal replacement** — You don't switch your shell to Lobster
 - **Not a general programming language** — It's for workflows, not apps
-- **Not trying to replace Clawdbot** — It makes Clawdbot better
-- **Not managing your secrets** — Clawdbot handles auth, Lobster orchestrates
+- **Not trying to replace OpenClaw** — It makes OpenClaw better
+- **Not managing your secrets** — OpenClaw handles auth, Lobster orchestrates
 
 ---
 
@@ -241,9 +241,9 @@ Lobster is:
 
 | Question | Answer |
 |----------|--------|
-| What is it? | Workflow runtime for Clawdbot |
+| What is it? | Workflow runtime for OpenClaw |
 | One-liner? | Safe automation — workflows that ask before acting |
 | Why use it? | Cheaper, safer, stateful automations |
 | Who uses it? | Everyone (invisibly) or power users (directly) |
 | Why not in core? | Plugin architecture — core stays small, capabilities are extensions |
-| Best analogy? | Zapier for Clawdbot, but with approval checkpoints |
+| Best analogy? | Zapier for OpenClaw, but with approval checkpoints |

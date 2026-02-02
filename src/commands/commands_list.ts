@@ -14,7 +14,7 @@ export const commandsListCommand: LobsterCommand = {
       `Usage:\n` +
       `  commands.list\n\n` +
       `Notes:\n` +
-      `  - Intended for agents (e.g. Clawdbot) to discover available pipeline stages dynamically.\n` +
+      `  - Intended for agents (e.g. OpenClaw) to discover available pipeline stages dynamically.\n` +
       `  - Output includes name/description plus optional metadata (argsSchema/examples/sideEffects) when provided by commands.\n`
     );
   },

@@ -139,7 +139,7 @@ test("email.triage --llm uses llm_task.invoke to draft replies (and can emit dra
       bodyLog.push(parsed);
 
       res.writeHead(200, { "content-type": "application/json" });
-      // Clawdbot tool router envelope -> llm-task tool envelope
+      // OpenClaw tool router envelope -> llm-task tool envelope
       res.end(
         JSON.stringify({
           ok: true,

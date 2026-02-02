@@ -5,7 +5,7 @@ export const workflowRegistry = {
     argsSchema: {
       type: 'object',
       properties: {
-        repo: { type: 'string', description: 'owner/repo (e.g. clawdbot/clawdbot)' },
+        repo: { type: 'string', description: 'owner/repo (e.g. openclaw/openclaw)' },
         pr: { type: 'number', description: 'Pull request number' },
         key: { type: 'string', description: 'Optional state key override.' },
         changesOnly: { type: 'boolean', description: 'If true, suppress output when unchanged.' },
@@ -15,7 +15,7 @@ export const workflowRegistry = {
     },
     examples: [
       {
-        args: { repo: 'clawdbot/clawdbot', pr: 1152 },
+        args: { repo: 'openclaw/openclaw', pr: 1152 },
         description: 'Monitor a PR and report when it changes.',
       },
     ],
@@ -27,7 +27,7 @@ export const workflowRegistry = {
     argsSchema: {
       type: 'object',
       properties: {
-        repo: { type: 'string', description: 'owner/repo (e.g. clawdbot/clawdbot)' },
+        repo: { type: 'string', description: 'owner/repo (e.g. openclaw/openclaw)' },
         pr: { type: 'number', description: 'Pull request number' },
         key: { type: 'string', description: 'Optional state key override.' },
       },
@@ -35,7 +35,7 @@ export const workflowRegistry = {
     },
     examples: [
       {
-        args: { repo: 'clawdbot/clawdbot', pr: 1152 },
+        args: { repo: 'openclaw/openclaw', pr: 1152 },
         description: 'Emit "PR updated" message only when changed.',
       },
     ],

@@ -26,7 +26,7 @@ export const workflowsRunCommand = {
     sideEffects: [],
   },
   help() {
-    return `workflows.run — run a named Lobster workflow\n\nUsage:\n  workflows.run --name <workflow> [--args-json '{...}']\n\nExample:\n  workflows.run --name github.pr.monitor.notify --args-json '{"repo":"clawdbot/clawdbot","pr":1152}'\n`;
+    return `workflows.run — run a named Lobster workflow\n\nUsage:\n  workflows.run --name <workflow> [--args-json '{...}']\n\nExample:\n  workflows.run --name github.pr.monitor.notify --args-json '{"repo":"openclaw/openclaw","pr":1152}'\n`;
   },
   async run({ input, args, ctx }) {
     // Drain input.

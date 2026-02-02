@@ -1,11 +1,11 @@
 export const clawdInvokeCommand = {
   name: 'clawd.invoke',
   meta: {
-    description: 'Call a local Clawdbot tool endpoint',
+    description: 'Call a local OpenClaw tool endpoint',
     argsSchema: {
       type: 'object',
       properties: {
-        url: { type: 'string', description: 'Clawdbot control URL (or CLAWD_URL)' },
+        url: { type: 'string', description: 'OpenClaw control URL (or CLAWD_URL)' },
         token: { type: 'string', description: 'Bearer token (or CLAWD_TOKEN)' },
         tool: { type: 'string', description: 'Tool name (e.g. message, cron, github, etc.)' },
         action: { type: 'string', description: 'Tool action' },
@@ -21,7 +21,7 @@ export const clawdInvokeCommand = {
     sideEffects: ['calls_clawd_tool'],
   },
   help() {
-    return `clawd.invoke — call a local Clawdbot tool endpoint\n\n` +
+    return `clawd.invoke — call a local OpenClaw tool endpoint\n\n` +
       `Usage:\n` +
       `  clawd.invoke --tool message --action send --args-json '{"provider":"telegram","to":"...","message":"..."}'\n` +
       `  clawd.invoke --tool message --action send --args-json '{...}' --dry-run\n` +
