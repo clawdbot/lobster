@@ -1,5 +1,5 @@
 {
-  "name": "@clawdbot/lobster",
+  "name": "@openclaw/lobster",
   "version": "2026.1.21-1",
   "description": "Workflow runtime for AI agents - deterministic pipelines with approval gates",
   "type": "module",
@@ -43,16 +43,16 @@
     "approval",
     "pipeline",
     "lobster",
-    "clawdbot"
+    "openclaw"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/clawdbot/lobster.git"
+    "url": "git+https://github.com/openclaw/lobster.git"
   },
   "bugs": {
-    "url": "https://github.com/clawdbot/lobster/issues"
+    "url": "https://github.com/openclaw/lobster/issues"
   },
-  "homepage": "https://github.com/clawdbot/lobster#readme",
+  "homepage": "https://github.com/openclaw/lobster#readme",
   "license": "MIT",
   "dependencies": {
     "ajv": "^8.17.1",
