@@ -449,7 +449,7 @@ function writeToolEnvelope(payload) {
 }
 
 function helpText() {
-  return `lobster — Clawdbot-native typed shell\n\n` +
+  return `lobster — OpenClaw-native typed shell\n\n` +
     `Usage:\n` +
     `  lobster '<pipeline>'\n` +
     `  lobster run --mode tool '<pipeline>'\n` +

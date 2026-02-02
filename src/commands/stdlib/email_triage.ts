@@ -233,7 +233,7 @@ export const emailTriageCommand = {
     }
 
     const model = String(args.model ?? '').trim();
-    // Model is optional when running under Clawdbot (llm_task.invoke will use Clawdbot defaults).
+    // Model is optional when running under OpenClaw (llm_task.invoke will use OpenClaw defaults).
 
     if (!ctx?.registry) throw new Error('email.triage (LLM mode) requires ctx.registry');
     const llmCmd = ctx.registry.get('llm_task.invoke');
