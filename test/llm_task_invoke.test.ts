@@ -308,7 +308,7 @@ test('llm_task.invoke uses CLAWD_URL (/tools/invoke) without requiring --url/--m
       const parsed = JSON.parse(buf || '{}');
       bodyLog.push(parsed);
 
-      // This is the Clawdbot tool router envelope.
+      // This is the OpenClaw tool router envelope.
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(
         JSON.stringify({
