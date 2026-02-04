@@ -8,6 +8,8 @@ args:
     description: How many days back to search
     default: "7"
 steps:
+  # NOTE: This assumes 'search-x' skill is installed in the current directory.
+  # Install with: clawhub install search-x
   - id: search
     command: node search-x/scripts/search.js --days ${days} "${topic}"
 

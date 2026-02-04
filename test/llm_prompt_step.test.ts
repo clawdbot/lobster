@@ -301,3 +301,10 @@ test('parseResumeArgs rejects whitespace-only --llm-response', () => {
     /--llm-response cannot be empty/,
   );
 });
+
+test('parseResumeArgs accepts --llm-response=value form', () => {
+  const result = parseResumeArgs(['--token', 'abc', '--llm-response=hello world']);
+  assert.equal(result.token, 'abc');
+  assert.equal(result.approved, true);
+  assert.equal(result.llmResponse, 'hello world');
+});

@@ -118,7 +118,24 @@ async function handleRun({ argv, registry }) {
       if (output.status === 'ok' && output.output.length) {
         process.stdout.write(JSON.stringify(output.output, null, 2));
         process.stdout.write('\n');
+        return;
       }
+
+      if (output.status === 'needs_llm') {
+        // Human mode: print the LLM request and explain how to resume
+        process.stderr.write('Workflow paused for LLM prompt.\n\n');
+        process.stderr.write(`Prompt: ${output.requiresLlm?.prompt}\n`);
+        if (output.requiresLlm?.system) {
+          process.stderr.write(`System: ${output.requiresLlm.system}\n`);
+        }
+        if (output.requiresLlm?.context) {
+          process.stderr.write(`Context: ${output.requiresLlm.context.slice(0, 500)}...\n`);
+        }
+        process.stderr.write(`\nResume with: lobster resume --token ${output.requiresLlm?.resumeToken} --llm-response "your response"\n`);
+        process.exitCode = 1;
+        return;
+      }
+
       return;
     } catch (err) {
       if (normalizedMode === 'tool') {
@@ -309,6 +326,30 @@ async function handleResume({ argv, registry }) {
     return;
   }
 
+  // Validate that resume type matches the saved state
+  if (llmResponse && payload.approvalStepId) {
+    writeToolEnvelope({
+      ok: false,
+      error: {
+        type: 'resume_mismatch',
+        message: 'Cannot use --llm-response to resume an approval step. Use --approve instead.',
+      },
+    });
+    process.exitCode = 2;
+    return;
+  }
+  if (approved && !llmResponse && payload.llmStepId) {
+    writeToolEnvelope({
+      ok: false,
+      error: {
+        type: 'resume_mismatch',
+        message: 'Cannot use --approve to resume an LLM prompt step. Use --llm-response instead.',
+      },
+    });
+    process.exitCode = 2;
+    return;
+  }
+
   if (payload.kind === 'workflow-file') {
     try {
       const output = await runWorkflowFile({
@@ -455,6 +496,7 @@ function writeLlmEnvelope(output) {
     ok: true,
     status: 'needs_llm',
     output: [],
+    requiresApproval: null,
     requiresLlm: output.requiresLlm ?? null,
   });
 }
