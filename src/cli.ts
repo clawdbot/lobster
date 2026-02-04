@@ -101,6 +101,11 @@ async function handleRun({ argv, registry }) {
           return;
         }
 
+        if (output.status === 'needs_llm') {
+          writeLlmEnvelope(output);
+          return;
+        }
+
         writeToolEnvelope({
           ok: true,
           status: 'ok',
@@ -296,10 +301,10 @@ async function resolveWorkflowFile(candidate) {
 
 async function handleResume({ argv, registry }) {
   const mode = 'tool';
-  const { token, approved } = parseResumeArgs(argv);
+  const { token, approved, llmResponse } = parseResumeArgs(argv);
   const payload = decodeResumeToken(token);
 
-  if (!approved) {
+  if (!approved && !llmResponse) {
     writeToolEnvelope({ ok: true, status: 'cancelled', output: [], requiresApproval: null });
     return;
   }
@@ -317,6 +322,7 @@ async function handleResume({ argv, registry }) {
         },
         resume: payload,
         approved: true,
+        llmResponse: llmResponse ?? undefined,
       });
 
       if (output.status === 'needs_approval') {
@@ -326,6 +332,11 @@ async function handleResume({ argv, registry }) {
           output: [],
           requiresApproval: output.requiresApproval ?? null,
         });
+        return;
+      }
+
+      if (output.status === 'needs_llm') {
+        writeLlmEnvelope(output);
         return;
       }
 
@@ -439,6 +450,15 @@ async function handleDoctor({ argv, registry }) {
   });
 }
 
+function writeLlmEnvelope(output) {
+  writeToolEnvelope({
+    ok: true,
+    status: 'needs_llm',
+    output: [],
+    requiresLlm: output.requiresLlm ?? null,
+  });
+}
+
 function writeToolEnvelope(payload) {
   const envelope = {
     protocolVersion: 1,
@@ -456,6 +476,7 @@ function helpText() {
     `  lobster run path/to/workflow.lobster\n` +
     `  lobster run --file path/to/workflow.lobster --args-json '{...}'\n` +
     `  lobster resume --token <token> --approve yes|no\n` +
+    `  lobster resume --token <token> --llm-response "LLM output text"\n` +
     `  lobster doctor\n` +
     `  lobster version\n` +
     `  lobster help <command>\n\n` +

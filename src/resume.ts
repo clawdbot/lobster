@@ -2,7 +2,7 @@ import { decodeToken } from './token.js';
 import { decodeWorkflowResumePayload } from './workflows/file.js';
 
 export function parseResumeArgs(argv) {
-  const args = { decision: null, token: null };
+  const args = { decision: null, token: null, llmResponse: null };
 
   for (let i = 0; i < argv.length; i++) {
     const tok = argv[i];
@@ -28,15 +28,33 @@ export function parseResumeArgs(argv) {
       args.decision = tok.slice('--decision='.length);
       continue;
     }
+    if (tok === '--llm-response') {
+      if (i + 1 >= argv.length) throw new Error('--llm-response requires a value');
+      args.llmResponse = argv[i + 1];
+      i++;
+      continue;
+    }
+    if (tok.startsWith('--llm-response=')) {
+      args.llmResponse = tok.slice('--llm-response='.length);
+      continue;
+    }
   }
 
   if (!args.token) throw new Error('resume requires --token');
-  if (!args.decision) throw new Error('resume requires --approve yes|no');
+
+  // LLM response resume doesn't need --approve
+  if (args.llmResponse !== null) {
+    const response = String(args.llmResponse);
+    if (!response.trim()) throw new Error('--llm-response cannot be empty');
+    return { token: String(args.token), approved: true, llmResponse: response };
+  }
+
+  if (!args.decision) throw new Error('resume requires --approve yes|no or --llm-response');
 
   const decision = String(args.decision).toLowerCase();
   if (!['yes', 'y', 'no', 'n'].includes(decision)) throw new Error('resume --approve must be yes or no');
 
-  return { token: String(args.token), approved: decision === 'yes' || decision === 'y' };
+  return { token: String(args.token), approved: decision === 'yes' || decision === 'y', llmResponse: null };
 }
 
 export function decodeResumeToken(token) {
