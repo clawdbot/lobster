@@ -18,7 +18,9 @@ export type WorkflowFile = {
 
 export type WorkflowStep = {
   id: string;
-  command: string;
+  command?: string;
+  prompt?: string;
+  system?: string;
   env?: Record<string, string>;
   cwd?: string;
   stdin?: unknown;
@@ -36,7 +38,7 @@ export type WorkflowStepResult = {
 };
 
 export type WorkflowRunResult = {
-  status: 'ok' | 'needs_approval' | 'cancelled';
+  status: 'ok' | 'needs_approval' | 'needs_llm' | 'cancelled';
   output: unknown[];
   requiresApproval?: {
     type: 'approval_request';
@@ -44,6 +46,13 @@ export type WorkflowRunResult = {
     items: unknown[];
     preview?: string;
     resumeToken?: string;
+  };
+  requiresLlm?: {
+    type: 'llm_request';
+    prompt: string;
+    system?: string;
+    context?: string;
+    resumeToken: string;
   };
 };
 
@@ -65,6 +74,7 @@ export type WorkflowResumePayload = {
   steps?: Record<string, WorkflowStepResult>;
   args?: Record<string, unknown>;
   approvalStepId?: string;
+  llmStepId?: string;
 };
 
 type WorkflowResumeState = {
@@ -73,6 +83,7 @@ type WorkflowResumeState = {
   steps: Record<string, WorkflowStepResult>;
   args: Record<string, unknown>;
   approvalStepId?: string;
+  llmStepId?: string;
   createdAt: string;
 };
 
@@ -98,8 +109,13 @@ export async function loadWorkflowFile(filePath: string): Promise<WorkflowFile> 
     if (!step.id || typeof step.id !== 'string') {
       throw new Error('Workflow step requires an id');
     }
-    if (!step.command || typeof step.command !== 'string') {
-      throw new Error(`Workflow step ${step.id} requires a command string`);
+    const hasCommand = step.command && typeof step.command === 'string';
+    const hasPrompt = step.prompt && typeof step.prompt === 'string';
+    if (!hasCommand && !hasPrompt) {
+      throw new Error(`Workflow step ${step.id} requires a command or prompt string`);
+    }
+    if (hasCommand && hasPrompt) {
+      throw new Error(`Workflow step ${step.id} cannot have both command and prompt`);
     }
     if (seen.has(step.id)) {
       throw new Error(`Duplicate workflow step id: ${step.id}`);
@@ -136,12 +152,14 @@ export async function runWorkflowFile({
   ctx,
   resume,
   approved,
+  llmResponse,
 }: {
   filePath?: string;
   args?: Record<string, unknown>;
   ctx: RunContext;
   resume?: WorkflowResumePayload;
   approved?: boolean;
+  llmResponse?: string;
 }): Promise<WorkflowRunResult> {
   const resumeState = resume?.stateKey
     ? await loadWorkflowResumeState(ctx.env, resume.stateKey)
@@ -164,6 +182,17 @@ export async function runWorkflowFile({
     results[resumeState.approvalStepId] = previous;
   }
 
+  // Resume from a host LLM callback — inject the response as the step's output
+  if (resumeState?.llmStepId && typeof llmResponse === 'string') {
+    let json: unknown;
+    try { json = JSON.parse(llmResponse.trim()); } catch { json = undefined; }
+    results[resumeState.llmStepId] = {
+      id: resumeState.llmStepId,
+      stdout: llmResponse,
+      json,
+    };
+  }
+
   let lastStepId: string | null = null;
 
   for (let idx = startIndex; idx < steps.length; idx++) {
@@ -174,13 +203,55 @@ export async function runWorkflowFile({
       continue;
     }
 
-    const command = resolveTemplate(step.command, resolvedArgs, results);
     const stdinValue = resolveStdin(step.stdin, resolvedArgs, results);
     const env = mergeEnv(ctx.env, workflow.env, step.env, resolvedArgs, results);
-    const cwd = resolveCwd(step.cwd ?? workflow.cwd, resolvedArgs);
 
-    const { stdout } = await runShellCommand({ command, stdin: stdinValue, env, cwd });
-    const json = parseJson(stdout);
+    let stdout: string;
+    let json: unknown;
+
+    if (isPromptStep(step)) {
+      const promptText = resolveTemplate(step.prompt!, resolvedArgs, results);
+      const systemText = step.system
+        ? resolveTemplate(step.system, resolvedArgs, results)
+        : undefined;
+
+      // Halt execution and delegate to the calling agent's LLM
+      const contextText = stdinValue || undefined;
+
+      const stateKey = await saveWorkflowResumeState(env as Record<string, string | undefined>, {
+        filePath: resolvedFilePath,
+        resumeAtIndex: idx + 1,
+        steps: results,
+        args: resolvedArgs,
+        llmStepId: step.id,
+        createdAt: new Date().toISOString(),
+      });
+
+      const resumeToken = encodeToken({
+        protocolVersion: 1,
+        v: 1,
+        kind: 'workflow-file',
+        stateKey,
+      } satisfies WorkflowResumePayload);
+
+      return {
+        status: 'needs_llm',
+        output: [],
+        requiresLlm: {
+          type: 'llm_request',
+          prompt: promptText,
+          system: systemText,
+          context: contextText,
+          resumeToken,
+        },
+      };
+    } else {
+      const command = resolveTemplate(step.command!, resolvedArgs, results);
+      const cwd = resolveCwd(step.cwd ?? workflow.cwd, resolvedArgs);
+      const shellResult = await runShellCommand({ command, stdin: stdinValue, env, cwd });
+      stdout = shellResult.stdout;
+      json = parseJson(stdout);
+    }
 
     results[step.id] = { id: step.id, stdout, json };
     lastStepId = step.id;
@@ -504,4 +575,8 @@ async function runShellCommand({
       reject(new Error(`workflow command failed (${code}): ${stderr.trim() || stdout.trim() || command}`));
     });
   });
+}
+
+function isPromptStep(step: { prompt?: string; command?: string }): boolean {
+  return typeof step.prompt === 'string' && step.prompt.trim().length > 0 && !step.command;
 }

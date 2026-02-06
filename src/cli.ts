@@ -101,6 +101,11 @@ async function handleRun({ argv, registry }) {
           return;
         }
 
+        if (output.status === 'needs_llm') {
+          writeLlmEnvelope(output);
+          return;
+        }
+
         writeToolEnvelope({
           ok: true,
           status: 'ok',
@@ -113,7 +118,24 @@ async function handleRun({ argv, registry }) {
       if (output.status === 'ok' && output.output.length) {
         process.stdout.write(JSON.stringify(output.output, null, 2));
         process.stdout.write('\n');
+        return;
       }
+
+      if (output.status === 'needs_llm') {
+        // Human mode: print the LLM request and explain how to resume
+        process.stderr.write('Workflow paused for LLM prompt.\n\n');
+        process.stderr.write(`Prompt: ${output.requiresLlm?.prompt}\n`);
+        if (output.requiresLlm?.system) {
+          process.stderr.write(`System: ${output.requiresLlm.system}\n`);
+        }
+        if (output.requiresLlm?.context) {
+          process.stderr.write(`Context: ${output.requiresLlm.context.slice(0, 500)}...\n`);
+        }
+        process.stderr.write(`\nResume with: lobster resume --token ${output.requiresLlm?.resumeToken} --llm-response "your response"\n`);
+        process.exitCode = 1;
+        return;
+      }
+
       return;
     } catch (err) {
       if (normalizedMode === 'tool') {
@@ -296,11 +318,35 @@ async function resolveWorkflowFile(candidate) {
 
 async function handleResume({ argv, registry }) {
   const mode = 'tool';
-  const { token, approved } = parseResumeArgs(argv);
+  const { token, approved, llmResponse } = parseResumeArgs(argv);
   const payload = decodeResumeToken(token);
 
-  if (!approved) {
+  if (!approved && !llmResponse) {
     writeToolEnvelope({ ok: true, status: 'cancelled', output: [], requiresApproval: null });
+    return;
+  }
+
+  // Validate that resume type matches the saved state
+  if (llmResponse && payload.approvalStepId) {
+    writeToolEnvelope({
+      ok: false,
+      error: {
+        type: 'resume_mismatch',
+        message: 'Cannot use --llm-response to resume an approval step. Use --approve instead.',
+      },
+    });
+    process.exitCode = 2;
+    return;
+  }
+  if (approved && !llmResponse && payload.llmStepId) {
+    writeToolEnvelope({
+      ok: false,
+      error: {
+        type: 'resume_mismatch',
+        message: 'Cannot use --approve to resume an LLM prompt step. Use --llm-response instead.',
+      },
+    });
+    process.exitCode = 2;
     return;
   }
 
@@ -317,6 +363,7 @@ async function handleResume({ argv, registry }) {
         },
         resume: payload,
         approved: true,
+        llmResponse: llmResponse ?? undefined,
       });
 
       if (output.status === 'needs_approval') {
@@ -326,6 +373,11 @@ async function handleResume({ argv, registry }) {
           output: [],
           requiresApproval: output.requiresApproval ?? null,
         });
+        return;
+      }
+
+      if (output.status === 'needs_llm') {
+        writeLlmEnvelope(output);
         return;
       }
 
@@ -439,6 +491,16 @@ async function handleDoctor({ argv, registry }) {
   });
 }
 
+function writeLlmEnvelope(output) {
+  writeToolEnvelope({
+    ok: true,
+    status: 'needs_llm',
+    output: [],
+    requiresApproval: null,
+    requiresLlm: output.requiresLlm ?? null,
+  });
+}
+
 function writeToolEnvelope(payload) {
   const envelope = {
     protocolVersion: 1,
@@ -456,6 +518,7 @@ function helpText() {
     `  lobster run path/to/workflow.lobster\n` +
     `  lobster run --file path/to/workflow.lobster --args-json '{...}'\n` +
     `  lobster resume --token <token> --approve yes|no\n` +
+    `  lobster resume --token <token> --llm-response "LLM output text"\n` +
     `  lobster doctor\n` +
     `  lobster version\n` +
     `  lobster help <command>\n\n` +
