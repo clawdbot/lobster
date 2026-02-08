@@ -174,10 +174,13 @@ export async function runWorkflowFile({
       continue;
     }
 
-    const command = resolveTemplate(step.command, resolvedArgs, results);
-    const stdinValue = resolveStdin(step.stdin, resolvedArgs, results);
     const env = mergeEnv(ctx.env, workflow.env, step.env, resolvedArgs, results);
-    const cwd = resolveCwd(step.cwd ?? workflow.cwd, resolvedArgs);
+    const command = resolveTemplate(step.command, resolvedArgs, results, env);
+    const stdinValue = resolveStdin(step.stdin, resolvedArgs, results, env);
+    const rawCwd = resolveCwd(step.cwd ?? workflow.cwd, resolvedArgs, env);
+    const cwd = rawCwd && !path.isAbsolute(rawCwd)
+      ? path.resolve(path.dirname(resolvedFilePath), rawCwd)
+      : rawCwd;
 
     const { stdout } = await runShellCommand({ command, stdin: stdinValue, env, cwd });
     const json = parseJson(stdout);
@@ -274,7 +277,7 @@ function mergeEnv(
     if (!source) return;
     for (const [key, value] of Object.entries(source)) {
       if (typeof value === 'string') {
-        env[key] = resolveTemplate(value, args, results);
+        env[key] = resolveTemplate(value, args, results, env);
       }
     }
   };
@@ -283,21 +286,26 @@ function mergeEnv(
   return env;
 }
 
-function resolveCwd(cwd: string | undefined, args: Record<string, unknown>) {
+function resolveCwd(
+  cwd: string | undefined,
+  args: Record<string, unknown>,
+  env?: Record<string, string | undefined>,
+) {
   if (!cwd) return undefined;
-  return resolveArgsTemplate(cwd, args);
+  return resolveArgsTemplate(cwd, args, env);
 }
 
 function resolveStdin(
   stdin: unknown,
   args: Record<string, unknown>,
   results: Record<string, WorkflowStepResult>,
+  env?: Record<string, string | undefined>,
 ) {
   if (stdin === null || stdin === undefined) return null;
   if (typeof stdin === 'string') {
     const ref = parseStepRef(stdin.trim());
     if (ref) return getStepRefValue(ref, results, true);
-    return resolveTemplate(stdin, args, results);
+    return resolveTemplate(stdin, args, results, env);
   }
   return JSON.stringify(stdin);
 }
@@ -306,14 +314,22 @@ function resolveTemplate(
   input: string,
   args: Record<string, unknown>,
   results: Record<string, WorkflowStepResult>,
+  env?: Record<string, string | undefined>,
 ) {
-  const withArgs = resolveArgsTemplate(input, args);
+  const withArgs = resolveArgsTemplate(input, args, env);
   return resolveStepRefs(withArgs, results);
 }
 
-function resolveArgsTemplate(input: string, args: Record<string, unknown>) {
+function resolveArgsTemplate(
+  input: string,
+  args: Record<string, unknown>,
+  envFallback?: Record<string, string | undefined>,
+) {
   return input.replace(/\$\{([A-Za-z0-9_-]+)\}/g, (match, key) => {
     if (key in args) return String(args[key]);
+    if (envFallback && key in envFallback && envFallback[key] != null) {
+      return envFallback[key]!;
+    }
     return match;
   });
 }
